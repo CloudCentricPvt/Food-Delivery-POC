@@ -79,7 +79,6 @@ fun AuthScreen(navController: NavController?,){
                         },
                         hint = "Enter Password"
                     )
-
                     Spacer(Modifier.height(20.dp))
 
                     Button(onClick = {
