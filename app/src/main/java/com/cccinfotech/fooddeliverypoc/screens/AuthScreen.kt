@@ -90,7 +90,6 @@ fun AuthScreen(navController: NavController?,){
                                 // logic here
                             }
                         }
-
                     },
                         modifier = Modifier.fillMaxWidth()
                     ) {
