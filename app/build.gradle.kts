@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.espresso.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,9 +73,47 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.compose.material3:material3:1.2.1")
 
+    // Firebase (managed by BOM)
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
 
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
-    implementation("com.google.firebase:firebase-firestore-ktx")
+    // Firebase services
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+    //Map
+    implementation("com.google.android.libraries.maps:maps:3.1.0-beta")
+    implementation("com.google.maps.android:maps-ktx:3.4.0")
+    implementation("com.google.maps.android:maps-utils-ktx:3.4.0")
+    implementation("com.google.android.gms:play-services-maps:19.1.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    implementation ("com.google.maps.android:maps-compose:4.3.3")
+    // Jetpack Compose BOM (make sure you already use it)
+    implementation (platform("androidx.compose:compose-bom:2025.01.01")) // or latest
+    // Material 3
+    implementation ("androidx.compose.material3:material3")
+    // ✅ Material Icons (needed for Visibility / VisibilityOff)
+    implementation ("androidx.compose.material:material-icons-extended")
+
+    //Volly
+    implementation("com.android.volley:volley:1.2.1")
+
+    configurations.all {
+        resolutionStrategy {
+            force("com.android.volley:volley:1.2.1")
+        }
+    }
+
+    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    implementation("com.razorpay:checkout:1.6.40")
+    implementation("com.google.android.libraries.places:places:3.3.0")
+
+    //bio metric
+    implementation("androidx.biometric:biometric:1.0.1")
+
 
 }
