@@ -77,4 +77,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
 
+    // location
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
 }
