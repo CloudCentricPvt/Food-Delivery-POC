@@ -30,6 +30,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.cccinfotech.fooddeliverypoc.R
+import com.cccinfotech.fooddeliverypoc.model.sendorder.Orders
 import com.cccinfotech.fooddeliverypoc.model.sendorder.SendOrder
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 import com.cccinfotech.fooddeliverypoc.viewmodel.MapViewModel
@@ -57,7 +58,7 @@ fun ViewMapScreen(
 
     val order = navController.previousBackStackEntry
         ?.savedStateHandle
-        ?.get<SendOrder>("order")
+        ?.get<Orders>("order")
 
     val mapViewModel: MapViewModel? = order?.orderId?.let { orderId ->
         viewModel(factory = MapViewModelFactory(orderId))
@@ -76,20 +77,29 @@ fun ViewMapScreen(
     var routePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     val apiKey = context.getString(R.string.google_maps_key)
 
-    val testDestination = order.let { LatLng(it.orderLatitude, it.orderLongitude) }
+    val testDestination = order.let {
+        it.orderLatitude?.let { it1 ->
+            it.orderLongitude?.let { it2 ->
+                LatLng(
+                    it1,
+                    it2
+                )
+            }
+        }
+    }
     val vehicleMarkerState = remember { MarkerState() }
 
     // 🔹 Fetch route points once we have firebase + destination
     LaunchedEffect(firebaseLocation, testDestination) {
-        Log.d("Order", "${order.orderId}")
-        Log.d("OrderId", orderId)
         if (firebaseLocation != null && order.orderId == mapViewModel.orderId.value) {
-            routePoints = getDirections(
-                context,
-                firebaseLocation!!,
-                testDestination,
-                apiKey
-            )
+            routePoints = testDestination?.let {
+                getDirections(
+                    context,
+                    firebaseLocation!!,
+                    it,
+                    apiKey
+                )
+            }!!
         }
     }
 
@@ -113,11 +123,18 @@ fun ViewMapScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Row(modifier = Modifier.fillMaxWidth().padding(10.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)) {
                 CommonUtils().CommonText("${order.customerName}", fontSize = 15)
+                Spacer(modifier = Modifier.height(2.dp))
+                val itemNames = order.items?.joinToString(", ") { it.productName ?: "" }
+                CommonUtils().CommonText("Your order $itemNames running status.", fontSize = 15)
             }
             Spacer(modifier = Modifier.height(10.dp))
-            Box(modifier = Modifier.fillMaxSize().padding(10.dp)) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp)) {
 
                 if (order.orderId == orderId) {
                     GoogleMap(
@@ -145,10 +162,12 @@ fun ViewMapScreen(
                             )
                         }
 
-                        Marker(
-                            state = MarkerState(testDestination),
-                            title = "Destination Point"
-                        )
+                        testDestination?.let { MarkerState(it) }?.let {
+                            Marker(
+                                state = it,
+                                title = "Destination Point"
+                            )
+                        }
 
                         // ✅ Polyline for delivery path (all Firebase points)
                         if (locations.size > 1) {

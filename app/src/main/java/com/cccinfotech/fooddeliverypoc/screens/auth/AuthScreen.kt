@@ -31,7 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.cccinfotech.fooddeliverypoc.constant.KUserInputTest
+import com.cccinfotech.fooddeliverypoc.commondesign.KUserInputTest
 import com.cccinfotech.fooddeliverypoc.utils.Poppins
 import com.cccinfotech.fooddeliverypoc.utils.SharedPrefManager
 import com.google.firebase.FirebaseApp

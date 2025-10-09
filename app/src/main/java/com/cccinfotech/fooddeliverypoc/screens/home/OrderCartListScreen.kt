@@ -32,9 +32,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.cccinfotech.fooddeliverypoc.model.sendorder.Orders
 import com.cccinfotech.fooddeliverypoc.model.sendorder.SendOrder
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
+import com.cccinfotech.fooddeliverypoc.utils.SharedPrefManager
 import com.google.firebase.firestore.FirebaseFirestore
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,16 +83,22 @@ fun OrderCartListScreen(navHostController: NavHostController) {
             }
 
             else -> {
+
+                val userOrders = orders
+                    .filter { it.customerId == SharedPrefManager.getString("UserId") }
+                    .sortedBy { parseOrderDateTimeCart(it, dateTimeFormatter = dateTimeFormatter) }
+
+
                 LazyColumn(contentPadding = padding) {
                     itemsIndexed(
-                        orders
+                        userOrders
                             .filter {
                                 it.status.equals(
                                     "inprogress",
                                     ignoreCase = true
                                 ) || it.status.equals("Pending", ignoreCase = true)
                             }
-                            .sortedBy { parseOrderDateTime(it, dateTimeFormatter) },
+                            .sortedBy { parseOrderDateTimeCart(it, dateTimeFormatter) },
                         key = { index, order ->
                             if (order.orderId.isNullOrBlank()) "order_$index" else order.orderId
                         }
@@ -177,5 +186,18 @@ fun OrderCartListScreen(navHostController: NavHostController) {
             dismissButton = {
             }
         )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun parseOrderDateTimeCart(order: SendOrder, dateTimeFormatter: DateTimeFormatter): LocalDateTime {
+    val dateStr = order.orderDate?.takeIf { it.isNotBlank() } ?: "01-01-1970"
+    val timeStr = order.currentTime?.takeIf { it.isNotBlank() } ?: "00:00"
+
+    return try {
+        LocalDateTime.parse("$dateStr $timeStr", dateTimeFormatter)
+    } catch (e: Exception) {
+        // fallback if format is invalid
+        LocalDateTime.of(1970, 1, 1, 0, 0)
     }
 }

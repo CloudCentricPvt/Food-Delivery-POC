@@ -62,8 +62,8 @@ fun SignupScreen(navController: NavHostController) {
                     value = email,
                     onValueChange = { email = it },
                     label = {
-                        Text(
-                            "Enter Email", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Enter Email",
                             fontWeight = FontWeight.Normal,
                         )
                     },
@@ -77,8 +77,8 @@ fun SignupScreen(navController: NavHostController) {
                     name,
                     { name = it },
                     label = {
-                        Text(
-                            "Enter Name", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Enter Name",
                             fontWeight = FontWeight.Normal,
                         )
                     },
@@ -94,8 +94,8 @@ fun SignupScreen(navController: NavHostController) {
                         phone = it
                     }
                 }, label = {
-                    Text(
-                        "Phone Number", fontFamily = Poppins,
+                    CommonUtils().CommonText(
+                        "Phone Number",
                         fontWeight = FontWeight.Normal,
                     )
                 },
@@ -108,8 +108,8 @@ fun SignupScreen(navController: NavHostController) {
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(role, { role = it }, label = {
-                    Text(
-                        "Role", fontFamily = Poppins,
+                    CommonUtils().CommonText(
+                        "Role",
                         fontWeight = FontWeight.Normal,
                     )
                 },
@@ -124,8 +124,8 @@ fun SignupScreen(navController: NavHostController) {
                     password,
                     { password = it },
                     label = {
-                        Text(
-                            "Password", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Password",
                             fontWeight = FontWeight.Normal,
                         )
                     },
@@ -176,7 +176,7 @@ fun SignupScreen(navController: NavHostController) {
                                 .document(uid)
                                 .set(user)
                                 .addOnSuccessListener {
-                                    isLoading = false // stop loader
+                                    isLoading = false
                                     Toast.makeText(ctx, "Account created", Toast.LENGTH_SHORT)
                                         .show()
                                     navController.navigate("Auth") {
@@ -203,16 +203,17 @@ fun SignupScreen(navController: NavHostController) {
                             strokeWidth = 2.dp,
                             color = Color.White
                         )
-                        Text(
-                            "Please wait...", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Please wait...",
                             fontWeight = FontWeight.Normal,
                         )
                     } else {
-                        Text(
-                            "Sign Up", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Sign Up",
                             fontWeight = FontWeight.Normal,
                         )
-                    }                }
+                    }
+                }
             }
         }
     )

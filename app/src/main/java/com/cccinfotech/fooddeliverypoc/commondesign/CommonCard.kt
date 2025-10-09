@@ -32,19 +32,23 @@ import coil.compose.AsyncImage
 import com.cccinfotech.fooddeliverypoc.R
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 
-
 @Composable
 fun CommonCard(
+    price:String,
     title: String,
     subTitle: String,
     imageUrl: String,
-    onClick: () -> Unit
+    onItemClick: () -> Unit,
+    onClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable {
+                onItemClick()
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         shape = RoundedCornerShape(10.dp),
 
         ) {
@@ -69,20 +73,35 @@ fun CommonCard(
             )
             Spacer(modifier = Modifier.width(10.dp))
 
-            Column() {
+            Column(
+                modifier = Modifier
+                    .weight(9f)
+            ) {
                 CommonUtils().CommonText(
                     title,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 16,
+                    fontSize = 16, maxLine = 1
                 )
                 CommonUtils().CommonText(
                     subTitle,
                     fontSize = 12,
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.Normal, maxLine = 1
                 )
+                Row {
+                    CommonUtils().CommonText(
+                        "Price  ₹ ",
+                        fontSize = 12,
+                        fontWeight = FontWeight.Normal, maxLine = 1
+                    )
+                    CommonUtils().CommonText(
+                        price,
+                        fontSize = 12,
+                        fontWeight = FontWeight.Medium, maxLine = 1
+                    )
+
+                }
 
             }
-            Spacer(modifier = Modifier.weight(1f))
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Order Icon",
@@ -102,11 +121,10 @@ fun CommonCard(
 @Composable
 fun GreetingPreview() {
     CommonCard(
+        "",
         title = "Pizza Order",
         subTitle = "This Is my Order",
-        imageUrl = ""
-    ) {
-
-    }
+        imageUrl = "", {}
+    ) {}
 
 }

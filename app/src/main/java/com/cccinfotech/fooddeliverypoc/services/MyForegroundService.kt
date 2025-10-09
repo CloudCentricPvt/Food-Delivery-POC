@@ -46,6 +46,15 @@ class MyForegroundService : Service() {
                         .document(orderId)
                         .addSnapshotListener { snapshot, _ ->
                             val status1 = snapshot?.getString("status")
+                            val deliveryTimeOTP = snapshot?.getString("deliveryTimeOTP")
+                            val deliveryBoye = snapshot?.getString("deliveryBoye")
+                            if (status1.equals("inprogress", ignoreCase = true)) {
+                                stopForeground(false)
+                                if (deliveryBoye != null) {
+                                    showInProgressNotification(deliveryBoye)
+                                    showOtpNotification(deliveryTimeOTP,deliveryBoye)
+                                }
+                            }
                             if (status1.equals("Delivered", ignoreCase = true)) {
                                 stopForeground(true)
                                 showCompletionNotification(productName)
@@ -135,6 +144,32 @@ class MyForegroundService : Service() {
         manager.notify(9999, notification)
     }
 
+    private fun showOtpNotification(otp: String?,deliveryBoy:String) {
+        val channelId = "OrderCompleteChannel"
+        val channelName = "Order Updates"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Your Order OTP is $otp")
+            .setContentText("Share it with delivery boy $deliveryBoy.")
+            .setSmallIcon(R.drawable.bike)
+            .setAutoCancel(false)
+            .build()
+
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(9999, notification)
+    }
+
+
     private fun showCancelledNotification(productName: String?) {
         val channelId = "OrderCompleteChannel"
         val channelName = "Order Updates"
@@ -152,6 +187,31 @@ class MyForegroundService : Service() {
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Sorry !!")
             .setContentText("Your order $productName has been cancelled.")
+            .setSmallIcon(R.drawable.bike)
+            .setAutoCancel(true)
+            .build()
+
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(9999, notification)
+    }
+
+    private fun showInProgressNotification(deliveryBoy: String?) {
+        val channelId = "OrderCompleteChannel"
+        val channelName = "Order Updates"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Your Order going to be ready")
+            .setContentText("$deliveryBoy accepted your order")
             .setSmallIcon(R.drawable.bike)
             .setAutoCancel(true)
             .build()

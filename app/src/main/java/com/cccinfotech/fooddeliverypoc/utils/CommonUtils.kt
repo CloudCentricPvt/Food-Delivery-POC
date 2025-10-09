@@ -5,20 +5,27 @@ import android.location.Address
 import android.location.Geocoder
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Log
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlin.random.Random
 
 class CommonUtils {
 
-   val  NOTIFICATION_ID = 1001
+    val NOTIFICATION_ID = 1001
 
     @Composable
     fun CommonText(
@@ -26,18 +33,35 @@ class CommonUtils {
         fontSize: Int = 12,
         fontWeight: FontWeight = FontWeight.Normal,
         color: Color = Color.Black,
-        modifier: Modifier = Modifier
-
+        modifier: Modifier = Modifier,
+        maxLine: Int = 2
     ) {
         Text(
-            style = MaterialTheme.typography.titleMedium,
             text = text,
             fontFamily = Poppins,
             fontSize = fontSize.sp,
             fontWeight = fontWeight,
             color = color,
-            modifier = modifier
+            modifier = modifier.wrapContentHeight(),
+            maxLines = maxLine,
+            lineHeight = fontSize.sp * 1.1
         )
+    }
+
+    var currentSnackbarSuccess = mutableStateOf(false)
+
+    fun showSnackbar(
+        message: String,
+        isSuccess: Boolean,
+        snackbarHostState: SnackbarHostState,
+        coroutineScope: CoroutineScope
+    ) {
+        coroutineScope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            currentSnackbarSuccess.value = isSuccess
+            Log.d("IsSuccess","$isSuccess")
+            snackbarHostState.showSnackbar(message)
+        }
     }
 
     @Composable
@@ -76,7 +100,8 @@ class CommonUtils {
     fun getAddressFromLatLng(context: Context, lat: Double, lng: Double): String? {
         return try {
             val geocoder = Geocoder(context, Locale.getDefault())
-            val addresses: MutableList<Address>? = geocoder.getFromLocation(lat, lng, 1) // get 1 result
+            val addresses: MutableList<Address>? =
+                geocoder.getFromLocation(lat, lng, 1) // get 1 result
             if (addresses?.isNotEmpty() == true) {
                 val address: Address = addresses[0]
                 // You can concatenate parts as needed
@@ -92,12 +117,17 @@ class CommonUtils {
     }
 
     fun isNetworkAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
+    fun generateOrderNumber(): String {
+        val number = Random.nextInt(100000, 1000000) // from 100000 to 999999
+        return number.toString()
+    }
 
 
 }

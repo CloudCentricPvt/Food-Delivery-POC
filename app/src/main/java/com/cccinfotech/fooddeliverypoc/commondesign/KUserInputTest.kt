@@ -1,4 +1,4 @@
-package com.cccinfotech.fooddeliverypoc.constant
+package com.cccinfotech.fooddeliverypoc.commondesign
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape

@@ -14,6 +14,7 @@ import com.cccinfotech.fooddeliverypoc.screens.home.OrderListScreen
 import com.cccinfotech.fooddeliverypoc.screens.home.PaymentScreen
 import com.cccinfotech.fooddeliverypoc.screens.map.MapScreen
 import com.cccinfotech.fooddeliverypoc.screens.map.ViewMapScreen
+import com.cccinfotech.fooddeliverypoc.screens.product.ProductDetailsScreen
 import com.cccinfotech.fooddeliverypoc.screens.searchplace.SearchPlaces
 import com.cccinfotech.fooddeliverypoc.screens.splash.SplashScreen
 import com.cccinfotech.fooddeliverypoc.testfile.TestMap
@@ -51,12 +52,13 @@ fun AppNavGraph(navController: NavHostController) {
             TestMap()
         }
         composable("Place"){
-            SearchPlaces()
+            SearchPlaces(navController)
         }
         composable("Payment"){
             PaymentScreen(navController)
         }
-
-
+        composable("Details"){
+            ProductDetailsScreen(navController)
+        }
     }
 }

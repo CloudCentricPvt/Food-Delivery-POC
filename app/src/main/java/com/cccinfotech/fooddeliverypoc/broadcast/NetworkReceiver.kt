@@ -15,10 +15,14 @@ class NetworkReceiver : BroadcastReceiver() {
 
         val isConnected = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
 
-        if (isConnected) {
-            return
-        } else {
-            Toast.makeText(context, "Internet is OFF", Toast.LENGTH_SHORT).show()
+        if (!isConnected) {
+            val broadcastIntent = Intent("NETWORK_STATUS_CHANGED")
+            broadcastIntent.putExtra("isConnected", false)
+            context.sendBroadcast(broadcastIntent)
+        }else{
+            val broadcastIntent = Intent("NETWORK_STATUS_CHANGED")
+            broadcastIntent.putExtra("isConnected", true)
+            context.sendBroadcast(broadcastIntent)
         }
     }
 }
