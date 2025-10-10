@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -37,17 +41,19 @@ import com.cccinfotech.fooddeliverypoc.utils.Poppins
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(navController: NavHostController) {
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    var role by remember { mutableStateOf("") }
+    val role = listOf("Admin", "Customer")
+    var expanded by remember { mutableStateOf(false) }
+    var selectedRole by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val ctx = LocalContext.current
     val maxChar = 10
     var isLoading by remember { mutableStateOf(false) }
-
 
     Scaffold(
         content = { paddingValues ->
@@ -107,18 +113,38 @@ fun SignupScreen(navController: NavHostController) {
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                OutlinedTextField(role, { role = it }, label = {
-                    CommonUtils().CommonText(
-                        "Role",
-                        fontWeight = FontWeight.Normal,
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedRole,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { CommonUtils().CommonText("Role") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
                     )
-                },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        role.forEach { role ->
+                            DropdownMenuItem(
+                                text = { CommonUtils().CommonText(role) },
+                                onClick = {
+                                    selectedRole = role
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
                     password,
@@ -164,7 +190,7 @@ fun SignupScreen(navController: NavHostController) {
                             val user = mapOf(
                                 "uid" to uid,
                                 "email" to email.trim(),
-                                "role" to role.trim(),
+                                "role" to selectedRole.trim(),
                                 "name" to name.trim(),
                                 "phone" to phone.trim(),
                                 "password" to password.trim(),
@@ -209,7 +235,7 @@ fun SignupScreen(navController: NavHostController) {
                         )
                     } else {
                         CommonUtils().CommonText(
-                            "Sign Up",
+                            "Sign Up", color = Color.White,
                             fontWeight = FontWeight.Normal,
                         )
                     }

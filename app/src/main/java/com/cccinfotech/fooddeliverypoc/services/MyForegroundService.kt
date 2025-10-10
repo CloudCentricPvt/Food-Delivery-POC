@@ -33,12 +33,14 @@ class MyForegroundService : Service() {
         when (intent?.action) {
             Actions.START.toString() -> {
                 val orderId = intent.getStringExtra("orderId")
-                val productName = intent.getStringExtra("ProductName")
+                val productName = intent.getStringArrayListExtra("ProductName")
                 val status = intent.getStringExtra("Status")
 
-                val notification = createNotification(
-                    productName, status,
-                )
+                val notification = productName?.let {
+                    createNotification(
+                        it, status,
+                    )
+                }
                 startForeground(CommonUtils().NOTIFICATION_ID, notification)
 
                 if (orderId != null) {
@@ -61,7 +63,9 @@ class MyForegroundService : Service() {
                                 stopSelf()
                             }else if(status1.equals("Cancelled", ignoreCase = true)){
                                 stopForeground(true)
-                                showCancelledNotification(productName)
+                                if (productName != null) {
+                                    showCancelledNotification(productName)
+                                }
                                 stopSelf()
                             }
                         }
@@ -86,7 +90,7 @@ class MyForegroundService : Service() {
     }
 
     private fun createNotification(
-        productName: String?,
+        productName: ArrayList<String>?,
         status: String?,
     ): Notification {
         val channelId = "ForegroundServiceChannelId"
@@ -119,7 +123,7 @@ class MyForegroundService : Service() {
             .build()
     }
 
-    private fun showCompletionNotification(productName: String?) {
+    private fun showCompletionNotification(productName: ArrayList<String>?) {
         val channelId = "OrderCompleteChannel"
         val channelName = "Order Updates"
 
@@ -170,7 +174,7 @@ class MyForegroundService : Service() {
     }
 
 
-    private fun showCancelledNotification(productName: String?) {
+    private fun showCancelledNotification(productName: ArrayList<String>) {
         val channelId = "OrderCompleteChannel"
         val channelName = "Order Updates"
 

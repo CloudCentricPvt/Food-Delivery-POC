@@ -40,7 +40,6 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import com.cccinfotech.fooddeliverypoc.model.product.Product
 import com.cccinfotech.fooddeliverypoc.model.sendorder.SendOrder
-import com.cccinfotech.fooddeliverypoc.screens.home.placeOrder
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 import com.cccinfotech.fooddeliverypoc.utils.Poppins
 import com.cccinfotech.fooddeliverypoc.utils.SharedPrefManager

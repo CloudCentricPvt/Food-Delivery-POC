@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
@@ -74,6 +75,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.cccinfotech.fooddeliverypoc.R
 import com.cccinfotech.fooddeliverypoc.broadcast.NetworkReceiver
+import com.cccinfotech.fooddeliverypoc.constant.CommonUtil
 import com.cccinfotech.fooddeliverypoc.model.sendorder.SendOrder
 import com.cccinfotech.fooddeliverypoc.services.MyForegroundService
 import com.cccinfotech.fooddeliverypoc.ui.theme.FoodDeliveryPOCTheme
@@ -160,6 +162,10 @@ fun PaymentScreen(navController: NavController) {
     var lat by remember { mutableDoubleStateOf(0.0) }
     var long by remember { mutableDoubleStateOf(0.0) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var showDialog by remember { mutableStateOf(false) }
+    var productList by remember { mutableStateOf<List<String>>(emptyList()) }
+
 
     val dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
 
@@ -298,13 +304,13 @@ fun PaymentScreen(navController: NavController) {
                     hostState = snackbarHostState,
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = 150.dp, start = 16.dp, end = 16.dp)
+                        .padding(top = 170.dp, start = 16.dp, end = 16.dp)
                 ) { data ->
                     val backgroundColor =
-                        if (!CommonUtils().currentSnackbarSuccess.value)
-                            Color(context.getColor(R.color.success))  // ✅ success color
+                        if (CommonUtil.currentSnackbarSuccess.value)
+                            Color(context.getColor(R.color.success))
                         else
-                            Color(context.getColor(R.color.failure))  // ✅ failure color
+                            Color(context.getColor(R.color.failure))
 
                     Snackbar(
                         containerColor = backgroundColor,
@@ -332,7 +338,16 @@ fun PaymentScreen(navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically,
 
                     ) {
-                    val totalAmount = cartItems.sumOf { order ->
+                    val userOrders = selectedList
+                        .filter { it.customerId == SharedPrefManager.getString("UserId") }
+                        .sortedBy {
+                            parseOrderDateTimeCart(
+                                it,
+                                dateTimeFormatter = dateTimeFormatter
+                            )
+                        }
+
+                    val totalAmount = userOrders.sumOf { order ->
                         order.amount
                             ?.replace("₹", "")
                             ?.replace(",", "")
@@ -342,29 +357,39 @@ fun PaymentScreen(navController: NavController) {
                     }
                     CommonUtils().CommonText("Total: ₹$totalAmount", fontWeight = FontWeight.Bold)
 
-                    Button(onClick = {
+                    Button(colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedList.isNotEmpty())
+                            Color(0xFF009688)
+                        else
+                            Color.LightGray
+                    ),onClick = {
                         try {
-
                             if (cartItems.isEmpty()) {
                                 return@Button
                             } else {
                                 isButtonLoading = true
-
                                 sendAddress?.let {
-                                    if (selectedList.isNotEmpty()){
-                                        placeOrder(context, db, selectedList, it) { _, message, _ ->
+                                    if (selectedList.isNotEmpty()) {
+                                        placeOrder(
+                                            context,
+                                            db,
+                                            selectedList,
+                                            it
+                                        ) { _, message, _, list ->
                                             CommonUtils().showSnackbar(
-                                                "Order Place successfully",
+                                                message,
                                                 true,
                                                 snackbarHostState,
                                                 coroutineScope
                                             )
+                                            productList = list
+                                            showDialog = true
                                             clearCart(db, selectedList)
                                             selectedList = emptyList()
                                             isButtonLoading = false
                                         }
 
-                                    }else{
+                                    } else {
                                         isButtonLoading = false
                                         CommonUtils().showSnackbar(
                                             "At least select one item",
@@ -395,7 +420,6 @@ fun PaymentScreen(navController: NavController) {
                             )
                         } else {
                             CommonUtils().CommonText("Place Order", color = Color.White)
-
                         }
 
                     }
@@ -403,6 +427,12 @@ fun PaymentScreen(navController: NavController) {
             }
         },
         content = { padding ->
+            if (showDialog) {
+                CommonUtil.OrderCompletedDialog(productList) {
+                    showDialog=false
+                    navController.navigateUp()
+                }
+            }
             if (isLoading) {
                 Box(
                     modifier = Modifier
@@ -466,7 +496,7 @@ fun PaymentScreen(navController: NavController) {
                         }
                         LazyColumn {
                             itemsIndexed(
-                                cartItems
+                                userOrders
                                     .filter {
                                         it.status.equals(
                                             "inprogress",
@@ -575,7 +605,7 @@ fun placeOrder(
     db: FirebaseFirestore,
     orders: List<SendOrder>,
     orderAddress: String,
-    onComplete: (Boolean, String, String?) -> Unit
+    onComplete: (Boolean, String, String?, ArrayList<String>) -> Unit
 ) {
 
     val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -611,20 +641,22 @@ fun placeOrder(
         .add(orderData)
         .addOnSuccessListener { documentRef ->
             val orderId = documentRef.id
-            onComplete(true, "Order placed successfully", orderId)
+            val productNames = arrayListOf<String>()
 
             orders.forEach {
+                productNames.add(it.productName)
                 val serviceIntent = Intent(context, MyForegroundService::class.java).apply {
                     action = MyForegroundService.Actions.START.toString()
                     putExtra("orderId", orderId)
-                    putExtra("ProductName", it.productName)
+                    putStringArrayListExtra("ProductName", productNames)
                     putExtra("Status", "Pending")
 
                 }
                 context.startForegroundService(serviceIntent)
             }
+            onComplete(true, "Order placed successfully", orderId, productNames)
         }
         .addOnFailureListener { e ->
-            onComplete(false, e.message ?: "Failed to place order", null)
+            onComplete(false, e.message ?: "Failed to place order", null, arrayListOf())
         }
 }

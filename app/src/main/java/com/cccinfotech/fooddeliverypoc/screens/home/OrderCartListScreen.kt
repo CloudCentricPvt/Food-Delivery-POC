@@ -197,7 +197,6 @@ fun parseOrderDateTimeCart(order: SendOrder, dateTimeFormatter: DateTimeFormatte
     return try {
         LocalDateTime.parse("$dateStr $timeStr", dateTimeFormatter)
     } catch (e: Exception) {
-        // fallback if format is invalid
         LocalDateTime.of(1970, 1, 1, 0, 0)
     }
 }
