@@ -1,4 +1,4 @@
-package com.cccinfotech.fooddeliverypoc.commondesign
+package com.cccinfotech.fooddeliverypoc.component_design
 
 import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,18 +21,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cccinfotech.fooddeliverypoc.model.product.Product
+import com.cccinfotech.fooddeliverypoc.model.restaurent.Restaurant
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 
 @Composable
 fun CategoryRow(
-    allItems: List<Product>,
-    onFiltered: (List<Product>) -> Unit
+    allItems: List<Restaurant>,
+    onFiltered: (List<Restaurant>) -> Unit
 ) {
     val categories = listOf("All", "Veg", "Non-Veg", "Snacks")
 
     var selectedCategory by remember { mutableStateOf("All") }
 
-    // ✅ Call once when composable first loads
     LaunchedEffect(allItems) {
         Log.d("AllItems", "CategoryRow received ${allItems.size} items")
         if (allItems.isNotEmpty()) {

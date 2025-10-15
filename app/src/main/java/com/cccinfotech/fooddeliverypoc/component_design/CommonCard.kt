@@ -1,6 +1,5 @@
-package com.cccinfotech.fooddeliverypoc.commondesign
+package com.cccinfotech.fooddeliverypoc.component_design
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -18,18 +16,18 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.cccinfotech.fooddeliverypoc.R
+import coil.request.ImageRequest
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 
 @Composable
@@ -41,6 +39,10 @@ fun CommonCard(
     onItemClick: () -> Unit,
     onClick: () -> Unit,
 ) {
+
+    val utils = remember { CommonUtils() }
+
+
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -60,47 +62,25 @@ fun CommonCard(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             AsyncImage(
-                model = imageUrl.ifEmpty { R.drawable.food },
-                contentDescription = "Sample Image",
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(CircleShape)
-                    .border(0.dp, Color.White, RectangleShape),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
                 contentScale = ContentScale.Crop,
-
-                placeholder = painterResource(R.drawable.food),
-                error = painterResource(R.drawable.food)
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(10.dp))
             )
             Spacer(modifier = Modifier.width(10.dp))
 
-            Column(
-                modifier = Modifier
-                    .weight(9f)
-            ) {
-                CommonUtils().CommonText(
-                    title,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16, maxLine = 1
-                )
-                CommonUtils().CommonText(
-                    subTitle,
-                    fontSize = 12,
-                    fontWeight = FontWeight.Normal, maxLine = 1
-                )
+            Column(modifier = Modifier.weight(9f)) {
+                utils.CommonText(title, fontWeight = FontWeight.Medium, fontSize = 16, maxLine = 1)
+                utils.CommonText(subTitle, fontSize = 12, fontWeight = FontWeight.Normal, maxLine = 1)
                 Row {
-                    CommonUtils().CommonText(
-                        "Price  ₹ ",
-                        fontSize = 12,
-                        fontWeight = FontWeight.Normal, maxLine = 1
-                    )
-                    CommonUtils().CommonText(
-                        price,
-                        fontSize = 12,
-                        fontWeight = FontWeight.Medium, maxLine = 1
-                    )
-
+                    utils.CommonText("Price ₹ ", fontSize = 12, fontWeight = FontWeight.Normal)
+                    utils.CommonText(price, fontSize = 12, fontWeight = FontWeight.Medium)
                 }
-
             }
             Icon(
                 imageVector = Icons.Default.Add,

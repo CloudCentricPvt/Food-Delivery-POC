@@ -1,4 +1,4 @@
-package com.cccinfotech.fooddeliverypoc.commondesign
+package com.cccinfotech.fooddeliverypoc.component_design
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,8 +49,8 @@ fun AutoSlidingBannerSlider(banners: List<Banner>) {
         state = listState,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        contentPadding = PaddingValues(horizontal = 8.dp)
+            .padding(vertical = 15.dp),
+        contentPadding = PaddingValues(horizontal = 15.dp)
     ) {
         items(
             items = banners,
@@ -61,7 +61,7 @@ fun AutoSlidingBannerSlider(banners: List<Banner>) {
                     .width(screenWidth - 16.dp)
                     .padding(4.dp)
                     .clickable { },
-                shape = RoundedCornerShape(5.dp),
+                shape = RoundedCornerShape(8.dp),
                 elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 AsyncImage(

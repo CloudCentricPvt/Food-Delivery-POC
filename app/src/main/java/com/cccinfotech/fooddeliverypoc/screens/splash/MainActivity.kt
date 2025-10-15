@@ -11,10 +11,8 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Surface
@@ -31,19 +29,23 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.cccinfotech.fooddeliverypoc.R
 import com.cccinfotech.fooddeliverypoc.broadcast.NetworkReceiver
+import com.cccinfotech.fooddeliverypoc.worker.MyWorker
 import com.cccinfotech.fooddeliverypoc.navgraph.AppNavGraph
 import com.cccinfotech.fooddeliverypoc.ui.theme.FoodDeliveryPOCTheme
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 import com.cccinfotech.fooddeliverypoc.utils.SharedPrefManager
 import com.razorpay.PaymentResultListener
 import kotlinx.coroutines.delay
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity(), PaymentResultListener {
 
     private lateinit var networkReceiver: NetworkReceiver
-
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,9 +69,20 @@ class MainActivity : ComponentActivity(), PaymentResultListener {
 
     override fun onStart() {
         super.onStart()
+
+        //network receiver notification
         networkReceiver = NetworkReceiver()
         val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
         registerReceiver(networkReceiver, filter)
+
+        //for schedule food message
+        val workRequest = PeriodicWorkRequestBuilder<MyWorker>(15, TimeUnit.MINUTES) // Minimum is 15 min
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "MyTask",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            workRequest
+        )
     }
 
     override fun onStop() {
@@ -119,8 +132,6 @@ fun SplashScreen(navController: NavHostController) {
                     .size(70.dp)
                     .align(Alignment.CenterHorizontally)
             )
-            Spacer(Modifier.height(5.dp))
-            Spacer(Modifier.height(5.dp))
         }
     }
 }

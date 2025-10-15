@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 
 @Composable
 fun BiometricAuthScreen(
@@ -24,14 +25,13 @@ fun BiometricAuthScreen(
     val activity = context as? FragmentActivity ?: return
     val executor = ContextCompat.getMainExecutor(context)
 
-    // Check if biometric is available
     val biometricManager = androidx.biometric.BiometricManager.from(context)
     val canAuthenticate = biometricManager.canAuthenticate(
     ) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
 
     if (!canAuthenticate) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Biometric authentication not available", color = Color.Red)
+            CommonUtils().CommonText("Biometric authentication not available", color = Color.Red)
         }
         return
     }
@@ -64,18 +64,16 @@ fun BiometricAuthScreen(
             .build()
     }
 
-    // Trigger authentication once
     LaunchedEffect(Unit) {
         biometricPrompt.authenticate(promptInfo)
     }
 
-    // Show fallback UI behind the system prompt
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator()
-        Text(
+        CommonUtils().CommonText(
             text = "Waiting for biometric authentication...",
             modifier = Modifier.align(Alignment.BottomCenter),
             color = Color.Gray

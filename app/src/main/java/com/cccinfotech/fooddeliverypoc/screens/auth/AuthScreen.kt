@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,10 +28,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.cccinfotech.fooddeliverypoc.commondesign.KUserInputTest
-import com.cccinfotech.fooddeliverypoc.utils.Poppins
+import com.cccinfotech.fooddeliverypoc.component_design.KUserInputTest
+import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 import com.cccinfotech.fooddeliverypoc.utils.SharedPrefManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -44,14 +42,14 @@ fun AuthScreen(navController: NavController?) {
 
     var mDeviceToken by remember { mutableStateOf("") }
     val context = LocalContext.current
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
     Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
 
-        var email by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-        var emailError by remember { mutableStateOf("") }
-        var passwordError by remember { mutableStateOf("") }
-        var isLoading by remember { mutableStateOf(false) }
-        // Token fetch hoke mDeviceToken me save hoga
         GetDeviceTokenComposable { token ->
             mDeviceToken = token
         }
@@ -60,16 +58,15 @@ fun AuthScreen(navController: NavController?) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(100.dp))
-            Text(
-                "Log In", color = Color.White, fontSize = 20.sp, fontFamily = Poppins,
+            CommonUtils().CommonText(
+                "Log In", color = Color.White, fontSize = 20,
                 fontWeight = FontWeight.SemiBold,
             )
             Spacer(Modifier.height(10.dp))
-            Text(
+            CommonUtils().CommonText(
                 "Please sign in to your account",
                 color = Color.White,
-                fontSize = 16.sp,
-                fontFamily = Poppins,
+                fontSize = 16,
                 fontWeight = FontWeight.SemiBold,
             )
 
@@ -82,23 +79,22 @@ fun AuthScreen(navController: NavController?) {
             ) {
                 Column(Modifier.padding(20.dp)) {
 
-                    Text(
-                        "Email", fontFamily = Poppins,
+                    CommonUtils().CommonText(
+                        "Email",
                         fontWeight = FontWeight.Medium,
                     )
                     Spacer(modifier = Modifier.height(5.dp))
-                    // Email field
                     KUserInputTest().UserTextField(
                         value = email,
                         onValueChange = {
                             email = it
-                            emailError = "Enter User Id" // clear error on typing
+                            emailError = "Enter User Id"
                         },
                         hint = "Enter Email"
                     )
                     Spacer(Modifier.height(20.dp))
-                    Text(
-                        "Password", fontFamily = Poppins,
+                    CommonUtils().CommonText(
+                        "Password",
                         fontWeight = FontWeight.Medium,
                     )
                     Spacer(modifier = Modifier.height(5.dp))
@@ -113,15 +109,14 @@ fun AuthScreen(navController: NavController?) {
                     )
                     Spacer(Modifier.height(20.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            "Don't have an account ? ", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Don't have an account ? ",
                             fontWeight = FontWeight.Normal,
                         )
                         Spacer(modifier = Modifier.width(3.dp))
-                        Text(
+                        CommonUtils().CommonText(
                             text = "Sign Up",
                             color = Color.Red,
-                            fontFamily = Poppins,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.clickable {
                                 navController?.navigate("SignUp")
@@ -162,8 +157,8 @@ fun AuthScreen(navController: NavController?) {
                                     navController?.navigate("Menu") {
                                         popUpTo("Auth") { inclusive = true }
                                     }
-                                    SharedPrefManager.putBoolean("IsLogin",true)
-                                    SharedPrefManager.putString("UserId",uid)
+                                    SharedPrefManager.putBoolean("IsLogin", true)
+                                    SharedPrefManager.putString("UserId", uid)
                                 }
                                 .addOnFailureListener {
                                     isLoading = false
@@ -178,22 +173,22 @@ fun AuthScreen(navController: NavController?) {
                             CircularProgressIndicator(
                                 modifier = Modifier
                                     .size(20.dp)
-                                    .padding(end = 8.dp),
+                                    .padding(end = 8.dp)
+                                    .align(Alignment.CenterVertically),
                                 strokeWidth = 2.dp,
                                 color = Color.White
                             )
-                            Text(
-                                "Please wait...", fontFamily = Poppins,
+                            CommonUtils().CommonText(
+                                "Please wait...",
                                 fontWeight = FontWeight.Normal,
                             )
                         } else {
-                            Text(
-                                "Login", fontFamily = Poppins,
-                                fontWeight = FontWeight.Normal,
+                            CommonUtils().CommonText(
+                                "Login",
+                                fontWeight = FontWeight.Normal, color = Color.White
                             )
                         }
                     }
-
                 }
             }
         }

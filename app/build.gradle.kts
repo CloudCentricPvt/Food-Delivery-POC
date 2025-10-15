@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.cccinfotech.fooddeliverypoc"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.cccinfotech.fooddeliverypoc"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -114,6 +115,5 @@ dependencies {
 
     //bio metric
     implementation("androidx.biometric:biometric:1.0.1")
-
 
 }

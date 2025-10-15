@@ -32,11 +32,10 @@ class MapViewModel(currentOrderId: String) : ViewModel() {
         databaseRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
-                    Log.d("Sanap","$snapshot")
+                    Log.d("Snap","$snapshot")
                     val lat = snapshot.child("lat").getValue(Double::class.java)
                     val lng = snapshot.child("lng").getValue(Double::class.java)
                     val fetchOrderId = snapshot.child("orderId").getValue(String::class.java)
-
                     if (lat != null && lng != null && fetchOrderId != null) {
                         val newLatLng = LatLng(lat, lng)
 
@@ -57,7 +56,6 @@ class MapViewModel(currentOrderId: String) : ViewModel() {
 
             override fun onCancelled(error: DatabaseError) {
                 Log.d("Sanape","$error")
-
                 isLoading.value = false
             }
         })

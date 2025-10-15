@@ -357,54 +357,66 @@ fun PaymentScreen(navController: NavController) {
                     }
                     CommonUtils().CommonText("Total: ₹$totalAmount", fontWeight = FontWeight.Bold)
 
-                    Button(colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedList.isNotEmpty())
-                            Color(0xFF009688)
-                        else
-                            Color.LightGray
-                    ),onClick = {
-                        try {
-                            if (cartItems.isEmpty()) {
-                                return@Button
-                            } else {
-                                isButtonLoading = true
-                                sendAddress?.let {
-                                    if (selectedList.isNotEmpty()) {
-                                        placeOrder(
-                                            context,
-                                            db,
-                                            selectedList,
-                                            it
-                                        ) { _, message, _, list ->
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedList.isNotEmpty())
+                                Color(0xFF009688)
+                            else
+                                Color.LightGray
+                        ), onClick = {
+                            try {
+                                if (cartItems.isEmpty()) {
+                                    return@Button
+                                } else {
+                                    isButtonLoading = true
+                                    sendAddress?.let {
+                                        if (lat != 0.0 && long != 0.0) {
+                                            if (selectedList.isNotEmpty()) {
+                                                placeOrder(
+                                                    lat, long,
+                                                    context,
+                                                    db,
+                                                    selectedList,
+                                                    it
+                                                ) { _, message, _, list ->
+                                                    CommonUtils().showSnackbar(
+                                                        message,
+                                                        true,
+                                                        snackbarHostState,
+                                                        coroutineScope
+                                                    )
+                                                    productList = list
+                                                    showDialog = true
+                                                    clearCart(db, selectedList)
+                                                    selectedList = emptyList()
+                                                    isButtonLoading = false
+                                                }
+                                            } else {
+                                                isButtonLoading = false
+                                                CommonUtils().showSnackbar(
+                                                    "Select At least one item",
+                                                    false,
+                                                    snackbarHostState,
+                                                    coroutineScope
+                                                )
+                                            }
+                                        } else {
+                                            isButtonLoading = false
                                             CommonUtils().showSnackbar(
-                                                message,
-                                                true,
+                                                "Check Your Location",
+                                                false,
                                                 snackbarHostState,
                                                 coroutineScope
                                             )
-                                            productList = list
-                                            showDialog = true
-                                            clearCart(db, selectedList)
-                                            selectedList = emptyList()
-                                            isButtonLoading = false
                                         }
-
-                                    } else {
-                                        isButtonLoading = false
-                                        CommonUtils().showSnackbar(
-                                            "At least select one item",
-                                            false,
-                                            snackbarHostState,
-                                            coroutineScope
-                                        )
                                     }
                                 }
+                            } catch (e: Exception) {
+                                isButtonLoading = false
+                                e.printStackTrace()
                             }
-                        } catch (e: Exception) {
-                            isButtonLoading = false
-                            e.printStackTrace()
-                        }
-                    }, enabled = !isButtonLoading) {
+                        }, enabled = !isButtonLoading
+                    ) {
 
                         if (isButtonLoading) {
                             CircularProgressIndicator(
@@ -421,7 +433,6 @@ fun PaymentScreen(navController: NavController) {
                         } else {
                             CommonUtils().CommonText("Place Order", color = Color.White)
                         }
-
                     }
                 }
             }
@@ -429,7 +440,7 @@ fun PaymentScreen(navController: NavController) {
         content = { padding ->
             if (showDialog) {
                 CommonUtil.OrderCompletedDialog(productList) {
-                    showDialog=false
+                    showDialog = false
                     navController.navigateUp()
                 }
             }
@@ -601,6 +612,8 @@ fun PaymentScreen(navController: NavController) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun placeOrder(
+    lat: Double?,
+    long: Double,
     context: Context,
     db: FirebaseFirestore,
     orders: List<SendOrder>,
@@ -623,37 +636,32 @@ fun placeOrder(
             "productDetails" to order.productDetails
         )
     }
-
+    val orderId = db.collection("orders").document().id
     val orderData = hashMapOf(
-        "orderId" to orders.firstOrNull()?.orderId,
+        "orderId" to orderId,
         "items" to itemsList,
         "currentTime" to currentTime,
         "status" to "Pending",
         "customerName" to orders.firstOrNull()?.customerName,
         "orderAddress" to orderAddress,
-        "orderLatitude" to orders.firstOrNull()?.orderLatitude,
-        "orderLongitude" to orders.firstOrNull()?.orderLongitude,
+        "orderLatitude" to lat,
+        "orderLongitude" to long,
         "orderDate" to currentDate,
         "orderNumber" to orderNumber,
         "customerId" to SharedPrefManager.getString("UserId")
     )
-    db.collection("orders")
-        .add(orderData)
-        .addOnSuccessListener { documentRef ->
-            val orderId = documentRef.id
-            val productNames = arrayListOf<String>()
 
-            orders.forEach {
-                productNames.add(it.productName)
-                val serviceIntent = Intent(context, MyForegroundService::class.java).apply {
-                    action = MyForegroundService.Actions.START.toString()
-                    putExtra("orderId", orderId)
-                    putStringArrayListExtra("ProductName", productNames)
-                    putExtra("Status", "Pending")
-
-                }
-                context.startForegroundService(serviceIntent)
+    db.collection("orders").document(orderId)
+        .set(orderData)
+        .addOnSuccessListener {
+            val productNames = ArrayList(orders.map { it.productName })
+            val serviceIntent = Intent(context, MyForegroundService::class.java).apply {
+                action = MyForegroundService.Actions.START.toString()
+                putExtra("orderId", orderId)
+                putStringArrayListExtra("ProductName", productNames)
+                putExtra("Status", "Pending")
             }
+            context.startForegroundService(serviceIntent)
             onComplete(true, "Order placed successfully", orderId, productNames)
         }
         .addOnFailureListener { e ->

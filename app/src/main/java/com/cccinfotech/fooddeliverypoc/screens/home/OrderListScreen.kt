@@ -23,7 +23,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -47,6 +45,7 @@ import com.cccinfotech.fooddeliverypoc.utils.SharedPrefManager
 import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,22 +60,23 @@ fun OrderListScreen(navController: NavHostController) {
 
     LaunchedEffect(Unit) {
         db.collection("orders")
-            .addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    isLoading = false
-                    Log.e("Fire-store", "Listen failed", exception)
+            .addSnapshotListener { snapshot, error ->
+                isLoading = false
+                if (error != null) {
+                    Log.e("Firestore", "Error: ${error.message}")
                     return@addSnapshotListener
                 }
 
-                if (snapshot != null) {
-                    try {
-                        orders = snapshot.toObjects(Orders::class.java)
-                        isLoading = false
-                    } catch (e: Exception) {
-                        isLoading = false
-                        Log.d("Error", "$e")
-                    }
-                }
+                val formatter =
+                    DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
+
+                orders = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(Orders::class.java)?.copy(orderId = doc.id)
+                }?.sortedByDescending { order ->
+                    val combined = "${order.orderDate} ${order.currentTime}"
+                    runCatching { LocalDateTime.parse(combined, formatter) }
+                        .getOrNull() ?: LocalDateTime.MIN
+                } ?: emptyList()
             }
     }
     Scaffold(
@@ -129,7 +129,10 @@ fun OrderListScreen(navController: NavHostController) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(8.dp)
-                                    .clickable { selectedOrder = order },
+                                    .clickable {
+                                        selectedOrder = order
+                                        Log.d("Order", "$selectedOrder")
+                                    },
                                 colors = CardDefaults.cardColors(
                                     containerColor = if (order.status.equals("delivered", true)) {
                                         Color.White

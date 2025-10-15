@@ -91,6 +91,8 @@ fun ViewMapScreen(
 
     // 🔹 Fetch route points once we have firebase + destination
     LaunchedEffect(firebaseLocation, testDestination) {
+        Log.d("OrderId","${order.orderId}")
+        Log.d("OrderTwo", mapViewModel.orderId.value)
         if (firebaseLocation != null && order.orderId == mapViewModel.orderId.value) {
             routePoints = testDestination?.let {
                 getDirections(

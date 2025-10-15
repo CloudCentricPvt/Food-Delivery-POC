@@ -11,4 +11,13 @@
 
     <color name="success">#42A045</color>
     <color name="failure">#E64A3F</color>
+
+    <!--My custom color-->
+    <color name="orange">#FF7622</color>
+    <color name="yellow_color">#FFD27C</color>
+    <color name="orange_light">#F9B992</color>
+    <color name="light_grey">#FAF7F7</color>
+    <color name="app_grey_color">#F0F5FA</color>
+    <color name="grey_color">#676767</color>
+    <color name="grey_dark">#98A8B8</color>
 </resources>

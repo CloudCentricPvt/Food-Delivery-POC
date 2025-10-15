@@ -18,7 +18,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -29,32 +28,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PersonPin
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -63,7 +57,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
@@ -89,27 +82,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
 import com.cccinfotech.fooddeliverypoc.R
-import com.cccinfotech.fooddeliverypoc.commondesign.AutoSlidingBannerSlider
-import com.cccinfotech.fooddeliverypoc.commondesign.CategoryRow
-import com.cccinfotech.fooddeliverypoc.commondesign.CommonCard
+import com.cccinfotech.fooddeliverypoc.component_design.AutoSlidingBannerSlider
+import com.cccinfotech.fooddeliverypoc.component_design.CartIconWithBadge
+import com.cccinfotech.fooddeliverypoc.component_design.CategoryRow
+import com.cccinfotech.fooddeliverypoc.component_design.CommonRestaurantCard
 import com.cccinfotech.fooddeliverypoc.constant.CommonUtil
 import com.cccinfotech.fooddeliverypoc.firebaseservices.FirebaseService
 import com.cccinfotech.fooddeliverypoc.model.banner.Banner
 import com.cccinfotech.fooddeliverypoc.model.product.Product
+import com.cccinfotech.fooddeliverypoc.model.restaurent.Restaurant
 import com.cccinfotech.fooddeliverypoc.model.sendorder.SendOrder
 import com.cccinfotech.fooddeliverypoc.model.user.User
 import com.cccinfotech.fooddeliverypoc.repository.BannerRepository
 import com.cccinfotech.fooddeliverypoc.sealed.Resource
 import com.cccinfotech.fooddeliverypoc.ui.theme.FoodDeliveryPOCTheme
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
-import com.cccinfotech.fooddeliverypoc.utils.Poppins
 import com.cccinfotech.fooddeliverypoc.utils.SharedPrefManager
 import com.cccinfotech.fooddeliverypoc.viewmodel.BannerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -121,8 +113,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import okhttp3.internal.filterList
-import okhttp3.internal.wait
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -133,8 +123,6 @@ import java.util.Locale
 fun HomeScreen(navController: NavController?) {
 
     val context = LocalContext.current
-    val activity = context.findActivity()
-    var showBottomSheet by remember { mutableStateOf(false) }
     var selectedItem by remember { mutableStateOf<Product?>(null) }
     val fusedLocationClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
@@ -150,7 +138,7 @@ fun HomeScreen(navController: NavController?) {
 
 
     val db = FirebaseFirestore.getInstance()
-    var list by remember { mutableStateOf<List<Product>>(emptyList()) }
+    var list by remember { mutableStateOf<List<Restaurant>>(emptyList()) }
     var name by remember { mutableStateOf("") }
     var lat by remember { mutableDoubleStateOf(0.0) }
     var long by remember { mutableDoubleStateOf(0.0) }
@@ -171,8 +159,6 @@ fun HomeScreen(navController: NavController?) {
     }
     val state by viewModel.bannerState.collectAsState()
     val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
-    val screenHeight = configuration.screenHeightDp.dp
 
     DisposableEffect(Unit) {
         val receiver = object : BroadcastReceiver() {
@@ -240,7 +226,7 @@ fun HomeScreen(navController: NavController?) {
             }
         }
 
-        getProduct(db) { productList ->
+        getRestaurents(db) { productList ->
             list = productList
         }
 
@@ -321,26 +307,20 @@ fun HomeScreen(navController: NavController?) {
                         verticalArrangement = Arrangement.Center,
                     ) {
                         Spacer(modifier = Modifier.weight(1f))
-                        Text(
+                        CommonUtils().CommonText(
                             text = "Welcome $name",
-                            fontFamily = Poppins,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                            style = MaterialTheme.typography.titleMedium
+                            fontSize = 15,
                         )
-                        Text(
+                        CommonUtils().CommonText(
                             text = email,
-                            fontFamily = Poppins,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 15.sp,
-                            style = MaterialTheme.typography.titleMedium
+                            fontSize = 15,
                         )
-                        Text(
+                        CommonUtils().CommonText(
                             text = phone,
-                            fontFamily = Poppins,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 15.sp,
-                            style = MaterialTheme.typography.titleMedium
+                            fontSize = 15,
                         )
                     }
                 }
@@ -348,10 +328,10 @@ fun HomeScreen(navController: NavController?) {
 
                 NavigationDrawerItem(
                     label = {
-                        Text(
-                            "Home", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Home",
                             fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp
+                            fontSize = 12
                         )
                     },
                     icon = {
@@ -368,10 +348,10 @@ fun HomeScreen(navController: NavController?) {
                 )
                 NavigationDrawerItem(
                     label = {
-                        Text(
-                            "See Order", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "See Order",
                             fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
+                            fontSize = 12,
                             modifier = Modifier
                                 .fillMaxWidth()
 
@@ -392,10 +372,10 @@ fun HomeScreen(navController: NavController?) {
                 )
                 NavigationDrawerItem(
                     label = {
-                        Text(
-                            "Profile", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Profile",
                             fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp
+                            fontSize = 12
                         )
                     },
                     icon = {
@@ -407,15 +387,18 @@ fun HomeScreen(navController: NavController?) {
                     },
                     selected = false,
                     onClick = {
-                        scope.launch { drawerState.close() }
+                        scope.launch {
+                            drawerState.close()
+                            navController?.navigate("HomePageNew")
+                        }
                     }
                 )
                 NavigationDrawerItem(
                     label = {
-                        Text(
-                            "Test", fontFamily = Poppins,
+                        CommonUtils().CommonText(
+                            "Test",
                             fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp
+                            fontSize = 12
                         )
                     },
                     icon = {
@@ -430,7 +413,6 @@ fun HomeScreen(navController: NavController?) {
                         scope.launch { navController?.navigate("Test") }
                     }
                 )
-
                 Spacer(modifier = Modifier.weight(1f))
                 Divider()
                 Spacer(modifier = Modifier.height(10.dp))
@@ -442,10 +424,10 @@ fun HomeScreen(navController: NavController?) {
                 ) {
                     NavigationDrawerItem(
                         label = {
-                            Text(
-                                "LogOut", fontFamily = Poppins,
+                            CommonUtils().CommonText(
+                                "LogOut",
                                 fontWeight = FontWeight.Normal,
-                                fontSize = 12.sp
+                                fontSize = 12
                             )
                         },
                         icon = {
@@ -471,8 +453,8 @@ fun HomeScreen(navController: NavController?) {
                 TopAppBar(
                     title = {
                         CommonUtils().CommonText(
-                            text = "Welcome $name",
-                            fontWeight = FontWeight.Normal,
+                            text = "Hello $name",
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 18
                         )
                     },
@@ -480,7 +462,10 @@ fun HomeScreen(navController: NavController?) {
                         IconButton(onClick = {
                             scope.launch { drawerState.open() }
                         }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            Icon(
+                                painter = painterResource(R.drawable.hamburger_icon),
+                                contentDescription = "Menu",
+                            )
                         }
                     },
                     actions = {
@@ -507,16 +492,19 @@ fun HomeScreen(navController: NavController?) {
                             contentColor = Color.White,
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                text = data.visuals.message,
-                                fontFamily = Poppins
+                            CommonUtils().CommonText(
+                                text = data.visuals.message, color = Color.White
                             )
                         }
                     }
                 }
             },
             content = { paddingValues ->
-                Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
                     when (state) {
                         is Resource.Loading -> {
                             Box(
@@ -525,7 +513,7 @@ fun HomeScreen(navController: NavController?) {
                                     .height(120.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Box(modifier = Modifier.size(20.dp)){
+                                Box(modifier = Modifier.size(20.dp)) {
                                     CircularProgressIndicator()
                                 }
                             }
@@ -539,7 +527,7 @@ fun HomeScreen(navController: NavController?) {
                         }
 
                         is Resource.Error -> {
-                            Text(
+                            CommonUtils().CommonText(
                                 text = "Error loading banners: ${(state as Resource.Error).message}",
                                 color = Color.Red,
                                 modifier = Modifier.padding(8.dp)
@@ -554,57 +542,29 @@ fun HomeScreen(navController: NavController?) {
                         }
                     )
 
-                    LazyColumn(
+                    CommonUtils().CommonText(
+                        "Restaurants",
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 18,
+                        modifier = Modifier.padding(start = 16.dp) // left margin of 16dp
+                    )
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(5.dp)
+                            .padding(5.dp),
                     ) {
-                        item {
-                        }
-
-                        // 2️⃣ Product list
-                        items(filteredList.size) { index ->
-                            val product = filteredList[index]
-                            CommonCard(
-                                price = product._rate.toString(),
-                                title = product.p_name.toString(),
-                                subTitle = product._description.toString(),
-                                imageUrl = product.image_url.toString(),
-                                onItemClick = {
-                                    selectedItem = filteredList[index]
-                                    navController?.currentBackStackEntry?.savedStateHandle?.set(
-                                        "product",
-                                        selectedItem
-                                    )
-                                    navController?.navigate("Details")
-                                },
-                                onClick = {
-                                    selectedItem = filteredList[index]
-                                    showBottomSheet = true
-                                }
-                            )
-                        }
-                    }
-                    if (showBottomSheet) {
-                        selectedItem?.let {
-                            Log.d("Lat", "$lat $long")
-                            currentAddress =
-                                CommonUtils().getAddressFromLatLng(context, lat, long).toString()
-
-                            if (activity != null) {
-                                SimpleBottomSheet(
-                                    context = context,
-                                    navController,
-                                    db = db,
-                                    snackbarHostState = snackbarHostState,
-                                    coroutineScope = coroutineScope,
-                                    onDismiss = { showBottomSheet = false },
-                                    name = name,
-                                    item = it, lat, activity, long, currentAddress,
-                                    onOrderPlaced = { addedCount ->
-                                        cartCount += addedCount
-                                    }
+                        items(
+                            items = filteredList,
+                            key = { it.restaurantId ?: it.hashCode() }
+                        ) { restaurant ->
+                            CommonRestaurantCard(restaurant){
+                                navController?.currentBackStackEntry?.savedStateHandle?.set(
+                                    "order",
+                                    restaurant
                                 )
+                                navController?.navigate("ProductList")
                             }
                         }
                     }
@@ -638,15 +598,15 @@ fun getUserData(db: FirebaseFirestore, userId: String, onResult: (User) -> Unit)
 
 }
 
-fun getProduct(db: FirebaseFirestore, onResult: (List<Product>) -> Unit) {
-    db.collection("product")
+fun getRestaurents(db: FirebaseFirestore, onResult: (List<Restaurant>) -> Unit) {
+    db.collection("restaurent")
         .addSnapshotListener { result, _ ->
-            val productList = mutableListOf<Product>()
+            val productList = mutableListOf<Restaurant>()
             if (result != null) {
                 for (document in result) {
-                    val product = document.toObject(Product::class.java)
+                    val product = document.toObject(Restaurant::class.java)
                     val id = document.id
-                    productList.add(product.copy(id = id))
+                    productList.add(product.copy(restaurantId = id))
                 }
             }
             onResult(productList)
@@ -654,216 +614,6 @@ fun getProduct(db: FirebaseFirestore, onResult: (List<Product>) -> Unit) {
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SimpleBottomSheet(
-    context: Context,
-    navController: NavController?,
-    db: FirebaseFirestore,
-    snackbarHostState: SnackbarHostState,
-    coroutineScope: CoroutineScope,
-    onDismiss: () -> Unit,
-    name: String,
-    item: Product,
-    latitude: Double,
-    activity: Activity,
-    longitude: Double,
-    orderAddress: String,
-    onOrderPlaced: (Int) -> Unit
-
-) {
-
-    var isLoading by remember { mutableStateOf(false) }
-    var count by remember { mutableStateOf(1) }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .wrapContentHeight()
-        ) {
-            Image(
-                painter = rememberImagePainter(item.image_url),
-                contentDescription = item.p_name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .weight(.8f)
-                    .height(150.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier
-                    .weight(1.2f)
-                    .fillMaxHeight(),
-                horizontalAlignment = Alignment.Start,
-            ) {
-                Column {
-                    CommonUtils().CommonText(
-                        "Hello $name",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16,
-                    )
-                    Spacer(Modifier.height(5.dp))
-                    CommonUtils().CommonText(
-                        "Your Order is ${item.p_name}",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14,
-                    )
-                }
-                Spacer(modifier = Modifier.height(5.dp))
-                Row {
-                    CommonUtils().CommonText("Add Quantity")
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Icon(
-                        modifier = Modifier
-                            .clickable {
-                                if (count <= 1) {
-                                    coroutineScope.launch {
-                                        CommonUtil.showSnackbar(
-                                            "Quantity must be at least one",
-                                            false,
-                                            snackbarHostState,
-                                            coroutineScope
-                                        )
-
-                                    }
-                                } else {
-                                    count--
-                                }
-                            }
-                            .size(25.dp),
-                        painter = painterResource(id = R.drawable.minus),
-                        contentDescription = "Minus Icon",
-                        tint = Color.Unspecified
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    CommonUtils().CommonText("$count", fontWeight = FontWeight.W600, fontSize = 16)
-                    Spacer(modifier = Modifier.width(20.dp))
-
-                    Icon(
-                        modifier = Modifier
-                            .clickable {
-                                count++
-                            }
-                            .size(25.dp),
-                        painter = painterResource(id = R.drawable.plus_icon),
-                        contentDescription = "Plus Icon",
-                        tint = Color.Unspecified
-                    )
-                }
-                Spacer(modifier = Modifier.height(5.dp))
-
-                CommonUtils().CommonText(
-                    "$count Items in cart",
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13
-                )
-                Spacer(modifier = Modifier.height(5.dp))
-
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                            val date = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
-                            val currentTime: String = sdf.format(Date())
-                            val currentDate: String = date.format(Date())
-
-                            if (latitude != 0.0 && longitude != 0.0) {
-                                val order = SendOrder(
-                                    productId = item.id ?: "",
-                                    productName = item.p_name.toString(),
-                                    productDetails = item._description.toString(),
-                                    quantity = count,
-                                    orderId = "",
-                                    currentTime = currentTime,
-                                    customerName = name,
-                                    deliveryBoye = "",
-                                    customerId = SharedPrefManager.getString("UserId"),
-                                    amount = "${(item._rate?.toDouble())?.times(count)}",
-                                    status = "Pending",
-                                    orderLongitude = longitude,
-                                    orderLatitude = latitude,
-                                    orderDate = currentDate,
-                                    orderAddress = orderAddress,
-                                    productImage = item.image_url,
-
-                                    )
-                                isLoading = true
-                                db.collection("CartItems")
-                                    .add(order)
-                                    .addOnSuccessListener { _ ->
-                                        coroutineScope.launch {
-                                            isLoading = false
-                                            CommonUtil.showSnackbar(
-                                                "Order is Added in the cart",
-                                                true,
-                                                snackbarHostState,
-                                                coroutineScope
-                                            )
-                                            order.quantity?.let { onOrderPlaced(it.toInt()) }
-                                            onDismiss()
-
-                                        }
-                                    }
-                                    .addOnFailureListener { e ->
-                                        coroutineScope.launch {
-                                            isLoading = false
-                                            CommonUtil.showSnackbar(
-                                                "Something Went Wrong",
-                                                false,
-                                                snackbarHostState,
-                                                coroutineScope
-                                            )
-                                            onDismiss()
-                                        }
-
-                                    }
-                            }
-                        }
-                    },
-                    modifier = Modifier.align(Alignment.End),
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(end = 8.dp),
-                            strokeWidth = 2.dp,
-                            color = Color.White
-                        )
-                        Text(
-                            "Please wait...", fontFamily = Poppins,
-                            fontWeight = FontWeight.W600,
-                        )
-                    } else {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            CommonUtils().CommonText(
-                                "Add to cart ",
-                                fontWeight = FontWeight.W400,
-                                color = Color.White,
-                                fontSize = 14
-                            )
-                            CommonUtils().CommonText(
-                                " ₹ ${(item._rate?.toInt() ?: 0) * count}",
-                                fontWeight = FontWeight.W400,
-                                color = Color.White,
-                                fontSize = 14
-                            )
-
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -881,34 +631,5 @@ fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
-@Composable
-fun CartIconWithBadge(
-    cartCount: Int,
-    navController: NavController?
-) {
-    BadgedBox(
-        modifier = Modifier.padding(end = 8.dp),
-        badge = {
-            if (cartCount > 0) {
-                Badge {
-                    Text(
-                        text = cartCount.toString(),
-                        color = Color.White,
-                        fontSize = 10.sp
-                    )
-                }
-            }
-        }
-    ) {
-        IconButton(onClick = {
-            navController?.navigate("Payment")
-        }) {
-            Icon(
-                imageVector = Icons.Default.ShoppingCart,
-                contentDescription = "Cart",
-                tint = Color.Black
-            )
-        }
-    }
-}
+
 

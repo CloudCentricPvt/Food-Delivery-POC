@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.cccinfotech.fooddeliverypoc.R
+import com.cccinfotech.fooddeliverypoc.constant.Constants
 import com.cccinfotech.fooddeliverypoc.screens.splash.MainActivity
 import com.cccinfotech.fooddeliverypoc.utils.CommonUtils
 import com.google.firebase.firestore.FirebaseFirestore
@@ -28,7 +29,6 @@ class MyForegroundService : Service() {
         super.onCreate()
     }
 
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             Actions.START.toString() -> {
@@ -37,6 +37,7 @@ class MyForegroundService : Service() {
                 val status = intent.getStringExtra("Status")
 
                 val notification = productName?.let {
+                    Constants.IS_ORDER_SEND=true
                     createNotification(
                         it, status,
                     )
@@ -51,18 +52,27 @@ class MyForegroundService : Service() {
                             val deliveryTimeOTP = snapshot?.getString("deliveryTimeOTP")
                             val deliveryBoye = snapshot?.getString("deliveryBoye")
                             if (status1.equals("inprogress", ignoreCase = true)) {
+                                Constants.IS_ORDER_IN_PROGRESS=true
+                                if (deliveryTimeOTP != null) {
+                                    Constants.DELIVERY_OTP=deliveryTimeOTP
+                                }
+                                if (deliveryBoye != null) {
+                                    Constants.DELIVERY_BOY=deliveryBoye
+                                }
                                 stopForeground(false)
                                 if (deliveryBoye != null) {
                                     showInProgressNotification(deliveryBoye)
-                                    showOtpNotification(deliveryTimeOTP,deliveryBoye)
+                                    showOtpNotification(deliveryTimeOTP, deliveryBoye)
                                 }
                             }
                             if (status1.equals("Delivered", ignoreCase = true)) {
                                 stopForeground(true)
+                                Constants.IS_ORDER_COMPLETED=true
                                 showCompletionNotification(productName)
                                 stopSelf()
-                            }else if(status1.equals("Cancelled", ignoreCase = true)){
+                            } else if (status1.equals("Cancelled", ignoreCase = true)) {
                                 stopForeground(true)
+                                Constants.IS_ORDER_CANCELLED=true
                                 if (productName != null) {
                                     showCancelledNotification(productName)
                                 }
@@ -148,7 +158,7 @@ class MyForegroundService : Service() {
         manager.notify(9999, notification)
     }
 
-    private fun showOtpNotification(otp: String?,deliveryBoy:String) {
+    private fun showOtpNotification(otp: String?, deliveryBoy: String) {
         val channelId = "OrderCompleteChannel"
         val channelName = "Order Updates"
 
