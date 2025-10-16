@@ -2,6 +2,7 @@ package com.cccinfotech.fooddeliverypoc.screens.product
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,7 +72,9 @@ import java.util.Locale
 fun ProductListScreen(navHostController: NavHostController) {
 
     var list by rememberSaveable { mutableStateOf<List<Product>>(emptyList()) }
+    var filteredList by rememberSaveable { mutableStateOf<List<Product>>(emptyList()) }
     var selectedItem by remember { mutableStateOf<Product?>(null) }
+    var isLoading by rememberSaveable { mutableStateOf(true) }
     val db = FirebaseFirestore.getInstance()
     var cartCount by remember { mutableIntStateOf(0) }
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -79,161 +82,138 @@ fun ProductListScreen(navHostController: NavHostController) {
     val activity = context.findActivity()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(true) }
-
 
     val order = navHostController.previousBackStackEntry
         ?.savedStateHandle
         ?.get<Restaurant>("order")
 
-
     LaunchedEffect(Unit) {
-        getProduct(db) { productList ->
+        db.collection("product").get().addOnSuccessListener { result ->
+            val productList = result.toObjects(Product::class.java)
             list = productList
             isLoading = false
         }
     }
 
-    Scaffold(topBar = {
-        TopAppBar(
-            title = {
-                CommonUtils().CommonText(
-                    "Product List ",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18
-                )
-            },
-            actions = {
-                CartIconWithBadge(cartCount = cartCount, navController = navHostController)
-            }
-        )
+    // Filter the list in a LaunchedEffect to prevent recomposition issues
+    LaunchedEffect(list, order) {
+        filteredList = if (!order?.restaurantId.isNullOrEmpty()) {
+            list.filter { it.restaurantId == order?.restaurantId }
+        } else {
+            emptyList()
+        }
+    }
 
-    }, content = { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(8.dp)
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    CommonUtils().CommonText(
+                        "Product List",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18
+                    )
+                },
+                actions = {
+                    CartIconWithBadge(cartCount = cartCount, navController = navHostController)
+                }
+            )
+        },
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(8.dp)
             ) {
                 when {
                     isLoading -> {
-                        item {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
                     }
 
-                    list.isNotEmpty() -> {
-                        val filteredList = list.filter { it.restaurantId == order?.restaurantId }
+                    filteredList.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.not_items),
+                                contentDescription = "No items",
+                                modifier = Modifier.size(250.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
 
-                        if (filteredList.isEmpty()) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth().fillMaxHeight(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.not_items),
-                                        contentDescription = "No items",
-                                        modifier = Modifier.size(250.dp),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
-                        } else {
-
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             items(filteredList) { product ->
+                                // Your product item code here
                                 product._rate?.let {
-                                    product.p_name?.let { it1 ->
-                                        product._description?.let { it2 ->
-                                            product.image_url?.let { it3 ->
-                                                CommonCard(it,
-                                                    it1, it2, it3, {
+                                    product.p_name?.let { name ->
+                                        product._description?.let { desc ->
+                                            product.image_url?.let { img ->
+                                                CommonCard(
+                                                    price = it,
+                                                    title = name,
+                                                    subTitle = desc,
+                                                    imageUrl = img,
+                                                    onClick = {
                                                         navHostController.currentBackStackEntry?.savedStateHandle?.set(
                                                             "product",
                                                             product
                                                         )
                                                         navHostController.navigate("Details")
-                                                    }) {
-                                                    selectedItem = product
-                                                    showBottomSheet = true
-                                                }
+                                                    },
+                                                    onItemClick =  {
+                                                        selectedItem = product
+                                                        showBottomSheet = true
+                                                    },
+                                                )
                                             }
                                         }
                                     }
                                 }
                             }
-
-                        }
-                    }
-
-                    else -> {
-                        item {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.not_items),
-                                    contentDescription = "No items",
-                                    modifier = Modifier.size(250.dp),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
                         }
                     }
                 }
 
-
-            }
-
-            if (showBottomSheet) {
-                selectedItem?.let {
-                    if (activity != null) {
-                        SimpleBottomSheet(
-                            context = context,
-                            navHostController,
-                            db = db,
-                            snackbarHostState = snackbarHostState,
-                            coroutineScope = coroutineScope,
-                            onDismiss = { showBottomSheet = false },
-                            name = SharedPrefManager.getString("UserName"),
-                            item = it, 0.0, activity, 0.0, "",
-                            onOrderPlaced = { addedCount ->
-                                cartCount += addedCount
-                            }
-                        )
+                if (showBottomSheet) {
+                    selectedItem?.let {
+                        if (activity != null) {
+                            SimpleBottomSheet(
+                                context = context,
+                                navHostController,
+                                db = db,
+                                snackbarHostState = snackbarHostState,
+                                coroutineScope = coroutineScope,
+                                onDismiss = { showBottomSheet = false },
+                                name = SharedPrefManager.getString("UserName"),
+                                item = it,
+                                latitude = 0.0,
+                                activity = activity,
+                                longitude = 0.0,
+                                orderAddress = "",
+                                onOrderPlaced = { addedCount ->
+                                    cartCount += addedCount
+                                }
+                            )
+                        }
                     }
                 }
             }
         }
-    })
+    )
 }
-
-
-fun getProduct(db: FirebaseFirestore, onResult: (List<Product>) -> Unit) {
-    db.collection("product")
-        .addSnapshotListener { result, _ ->
-            val productList = mutableListOf<Product>()
-            if (result != null) {
-                for (document in result) {
-                    val product = document.toObject(Product::class.java)
-                    productList.add(product)
-                }
-            }
-            onResult(productList)
-        }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -255,7 +235,7 @@ fun SimpleBottomSheet(
 ) {
 
     var isLoading by remember { mutableStateOf(false) }
-    var count by remember { mutableStateOf(1) }
+    var count by remember { mutableIntStateOf(1) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss
@@ -435,7 +415,6 @@ fun SimpleBottomSheet(
                                 color = Color.White,
                                 fontSize = 14
                             )
-
                         }
                     }
                 }

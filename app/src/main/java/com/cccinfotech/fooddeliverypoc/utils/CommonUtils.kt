@@ -5,10 +5,8 @@ import android.location.Address
 import android.location.Geocoder
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.util.Log
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -17,7 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -27,6 +24,7 @@ import kotlin.random.Random
 class CommonUtils {
 
     val NOTIFICATION_ID = 1001
+    private var currentSnackbarSuccess = mutableStateOf(false)
 
     @Composable
     fun CommonText(
@@ -49,8 +47,6 @@ class CommonUtils {
         )
     }
 
-    var currentSnackbarSuccess = mutableStateOf(false)
-
     fun showSnackbar(
         message: String,
         isSuccess: Boolean,
@@ -60,7 +56,6 @@ class CommonUtils {
         coroutineScope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
             currentSnackbarSuccess.value = isSuccess
-            Log.d("IsSuccess","$isSuccess")
             snackbarHostState.showSnackbar(message)
         }
     }
@@ -126,7 +121,7 @@ class CommonUtils {
     }
 
     fun generateOrderNumber(): String {
-        val number = Random.nextInt(100000, 1000000) // from 100000 to 999999
+        val number = Random.nextInt(100000, 1000000)
         return number.toString()
     }
 

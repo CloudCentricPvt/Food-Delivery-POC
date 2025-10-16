@@ -164,7 +164,7 @@ fun ProductDetailsScreen(navHostController: NavHostController) {
                     Image(
                         painter = rememberImagePainter(product.image_url),
                         contentDescription = "product.image_url",
-                        contentScale = ContentScale.Crop,
+                        contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp)
@@ -190,5 +190,4 @@ fun ProductDetailsScreen(navHostController: NavHostController) {
 
             }
         })
-
 }

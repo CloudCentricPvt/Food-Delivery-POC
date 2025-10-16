@@ -13,21 +13,16 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -38,18 +33,13 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PersonPin
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -73,9 +63,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -85,7 +73,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.rememberImagePainter
 import com.cccinfotech.fooddeliverypoc.R
 import com.cccinfotech.fooddeliverypoc.component_design.AutoSlidingBannerSlider
 import com.cccinfotech.fooddeliverypoc.component_design.CartIconWithBadge
@@ -96,7 +83,6 @@ import com.cccinfotech.fooddeliverypoc.firebaseservices.FirebaseService
 import com.cccinfotech.fooddeliverypoc.model.banner.Banner
 import com.cccinfotech.fooddeliverypoc.model.product.Product
 import com.cccinfotech.fooddeliverypoc.model.restaurent.Restaurant
-import com.cccinfotech.fooddeliverypoc.model.sendorder.SendOrder
 import com.cccinfotech.fooddeliverypoc.model.user.User
 import com.cccinfotech.fooddeliverypoc.repository.BannerRepository
 import com.cccinfotech.fooddeliverypoc.sealed.Resource
@@ -111,11 +97,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -123,7 +105,6 @@ import java.util.Locale
 fun HomeScreen(navController: NavController?) {
 
     val context = LocalContext.current
-    var selectedItem by remember { mutableStateOf<Product?>(null) }
     val fusedLocationClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
     }
@@ -134,8 +115,6 @@ fun HomeScreen(navController: NavController?) {
     var showPermissionDialog by remember { mutableStateOf(false) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var cartCount by remember { mutableIntStateOf(0) }
-    var currentAddress by remember { mutableStateOf("") }
-
 
     val db = FirebaseFirestore.getInstance()
     var list by remember { mutableStateOf<List<Restaurant>>(emptyList()) }
@@ -150,7 +129,6 @@ fun HomeScreen(navController: NavController?) {
     val coroutineScope = rememberCoroutineScope()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    var selectedCategory by remember { mutableStateOf("All") }
     var filteredList by remember { mutableStateOf(list) }
 
     val firebaseService = FirebaseService()
@@ -158,7 +136,6 @@ fun HomeScreen(navController: NavController?) {
         BannerViewModel(BannerRepository(firebaseService))
     }
     val state by viewModel.bannerState.collectAsState()
-    val configuration = LocalConfiguration.current
 
     DisposableEffect(Unit) {
         val receiver = object : BroadcastReceiver() {
@@ -389,7 +366,6 @@ fun HomeScreen(navController: NavController?) {
                     onClick = {
                         scope.launch {
                             drawerState.close()
-                            navController?.navigate("HomePageNew")
                         }
                     }
                 )
@@ -624,12 +600,8 @@ fun GreetingPreview() {
     }
 }
 
-
 fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
 }
-
-
-

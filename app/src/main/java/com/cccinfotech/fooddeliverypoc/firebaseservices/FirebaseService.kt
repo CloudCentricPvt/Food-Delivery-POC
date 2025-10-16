@@ -13,8 +13,6 @@ class FirebaseService {
     suspend fun getDocument(path: String) =
         db.document(path).get().await()
 
-
-
     suspend fun <T> getData(collectionName: String, clazz: Class<T>): List<T> {
         val snapshot = db.collection(collectionName).get().await()
         return snapshot.documents.mapNotNull { doc ->

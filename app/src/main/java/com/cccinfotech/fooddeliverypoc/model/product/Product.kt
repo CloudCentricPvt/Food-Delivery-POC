@@ -12,6 +12,4 @@ data class Product(
     val image_url: String? = "",
     val category: String? = "",
     val restaurantId: String? = ""
-
 ) : Serializable
-

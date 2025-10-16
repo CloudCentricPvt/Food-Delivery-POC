@@ -76,8 +76,9 @@ class MainActivity : ComponentActivity(), PaymentResultListener {
         registerReceiver(networkReceiver, filter)
 
         //for schedule food message
-        val workRequest = PeriodicWorkRequestBuilder<MyWorker>(15, TimeUnit.MINUTES) // Minimum is 15 min
-            .build()
+        val workRequest =
+            PeriodicWorkRequestBuilder<MyWorker>(15, TimeUnit.MINUTES) // Minimum is 15 min
+                .build()
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "MyTask",
             ExistingPeriodicWorkPolicy.UPDATE,
@@ -104,7 +105,7 @@ fun SplashScreen(navController: NavHostController) {
     LaunchedEffect(true) {
         delay(3000L)
         if (SharedPrefManager.getBoolean("IsLogin")) {
-            navController.navigate("Menu"){
+            navController.navigate("Menu") {
                 popUpTo("splash") { inclusive = true }
             }
         } else {
